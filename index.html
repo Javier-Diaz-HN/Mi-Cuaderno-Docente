@@ -307,6 +307,13 @@ nav i{position:relative}
 .hintf{list-style:none;color:var(--mut);font-size:12px;margin:0 2px 8px}
 /* Chips de parciales en la ficha: si son muchos, se desplazan de lado dentro de su fila y no empujan la pantalla */
 .pbar.fscope{overflow-x:auto;overflow-y:hidden;max-width:100%;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch;padding:10px 0 4px;margin:0;touch-action:pan-x}
+/* Robustez con letra grande del sistema y pantallas angostas: se acomodan en filas en vez de salirse */
+.stats{flex-wrap:wrap}
+.seg button{min-width:0}
+#cdias{flex-wrap:wrap}
+#cdias button{flex:1 1 38px}
+#pTitle,#pnTitle,#paTitle,#prTitle,#psTitle,#pdTitle{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2;overflow:hidden;overflow-wrap:anywhere}
+.m3{flex-wrap:wrap}
 /* Regalo del perfil */
 .lw{position:relative;display:flex;flex:none}
 #giftDot{position:absolute;right:-6px;bottom:-6px;font-size:18px;line-height:1;pointer-events:none;animation:gbrinco 1.4s ease-in-out infinite}

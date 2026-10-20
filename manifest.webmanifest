@@ -1,6 +1,6 @@
 {
  "name": "Mi Cuaderno Docente",
- "short_name": "Cuaderno",
+ "short_name": "Mi Cuaderno",
  "description": "Asistencia, notas y reportes para docentes, sin internet.",
  "id": "./",
  "start_url": "./",
