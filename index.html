@@ -1022,23 +1022,28 @@ function cerrarTop(){
 }
 document.addEventListener('keydown',e=>{if(e.key==='Escape')cerrarTop()});
 /* Botón "atrás" del teléfono: cierra la capa de arriba en vez de salir de la app */
-const hayCapa=()=>!$('#gift').hidden||!$('#dlg').hidden||!$('#sheet').hidden||!!document.querySelector('#panel.open,#panelN.open,#panelA.open,#panelF.open,#panelC.open,#panelR.open,#panelS.open,#panelD.open,#panelRec.open');
+const PANELES='#panel.open,#panelN.open,#panelA.open,#panelF.open,#panelC.open,#panelR.open,#panelS.open,#panelD.open,#panelRec.open';
 const hayCapaSobreNav=()=>!$('#gift').hidden||!$('#dlg').hidden||!$('#sheet').hidden||!!document.querySelector('#panel.open,#panelN.open,#panelA.open,#panelF.open,#panelC.open');
-let centinela=false, ignorarPop=false;
+// Cada capa abierta (panel, ventana, ficha) tiene su propia entrada en el historial: cada "atrás" del teléfono cierra una sola
+const nCapas=()=>(!$('#gift').hidden?1:0)+(!$('#dlg').hidden?1:0)+(!$('#sheet').hidden?1:0)+document.querySelectorAll(PANELES).length+((typeof sdet!=='undefined'&&sdet&&$('#panelS').classList.contains('open'))?1:0);
+let empujadas=0, ignorarPop=0;
 function revisarCapas(){
-  const h=hayCapa();
+  const n=nCapas();
   $('nav').toggleAttribute('inert',hayCapaSobreNav());
   if(typeof marcarNav==='function')marcarNav();
   try{
-    if(h&&!centinela){history.pushState({capa:1},'');centinela=true}
-    else if(!h&&centinela){centinela=false;ignorarPop=true;history.back()}
+    const act=!navigator.userActivation||navigator.userActivation.isActive;   // el navegador ignora entradas creadas sin tocar la pantalla
+    if(empujadas<n&&act){while(empujadas<n){history.pushState({capa:empujadas+1},'');empujadas++}}
+    else if(empujadas>n){const k=empujadas-n;empujadas=n;ignorarPop++;history.go(-k)}
   }catch(e){}
 }
 new MutationObserver(revisarCapas).observe(document.body,{subtree:true,attributes:true,attributeFilter:['class','hidden']});
+document.addEventListener('click',()=>setTimeout(revisarCapas,0),true);   // si una capa se abrió sin tocar, se registra en el siguiente toque
 window.addEventListener('popstate',()=>{
-  if(ignorarPop){ignorarPop=false;return}
-  if(centinela){centinela=false;cerrarTop()}
+  if(ignorarPop>0){ignorarPop--;return}
+  if(empujadas>0){empujadas--;cerrarTop()}
 });
+
 
 /* ===== Acciones del inicio ===== */
 document.addEventListener('click',e=>{
