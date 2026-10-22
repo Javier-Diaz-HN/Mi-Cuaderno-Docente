@@ -14,6 +14,50 @@
   "education",
   "productivity"
  ],
+ "screenshots": [
+  {
+   "src": "screenshots/01-inicio.png",
+   "sizes": "1080x1920",
+   "type": "image/png",
+   "form_factor": "narrow",
+   "label": "Inicio con tus clases y pendientes del día"
+  },
+  {
+   "src": "screenshots/02-asistencia.png",
+   "sizes": "1080x1920",
+   "type": "image/png",
+   "form_factor": "narrow",
+   "label": "Toma la asistencia en segundos"
+  },
+  {
+   "src": "screenshots/03-notas.png",
+   "sizes": "1080x1920",
+   "type": "image/png",
+   "form_factor": "narrow",
+   "label": "Notas por parcial: acumulativo y examen"
+  },
+  {
+   "src": "screenshots/04-actividad.png",
+   "sizes": "1080x1920",
+   "type": "image/png",
+   "form_factor": "narrow",
+   "label": "Tareas, proyectos y exámenes"
+  },
+  {
+   "src": "screenshots/05-reportes.png",
+   "sizes": "1080x1920",
+   "type": "image/png",
+   "form_factor": "narrow",
+   "label": "Reportes claros de cada clase"
+  },
+  {
+   "src": "screenshots/06-alumno.png",
+   "sizes": "1080x1920",
+   "type": "image/png",
+   "form_factor": "narrow",
+   "label": "Ficha de cada alumno"
+  }
+ ],
  "icons": [
   {
    "src": "icons/icon-96.png",

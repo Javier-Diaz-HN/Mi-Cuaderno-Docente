@@ -791,7 +791,7 @@ nav i{position:relative}
   <div class="bar"><button id="pdSave" data-i18n="diar.guardar">Guardar entrada</button></div>
 </section>
 <input type="file" id="fFoto" accept="image/*" hidden>
-<input type="file" id="fPerfil" accept="application/json,.json" hidden>
+<input type="file" id="fPerfil" hidden>
 <div id="lock" hidden role="dialog" aria-modal="true" aria-labelledby="lkTit">
   <h2 id="lkTit"></h2><div id="lkDots"></div><div id="lkMsg" role="alert"></div>
   <div id="lkPad">
@@ -2477,16 +2477,27 @@ const PERSONA='<svg viewBox="0 0 24 24" width="32" height="32" fill="none" strok
 function setFoto(url){$('#btnPerfil').innerHTML=okFoto(url)?`<img src="${url}" alt="${t('perfil.foto_alt')}">`:PERSONA}
 
 // Guardar el perfil + datos en un archivo (Pro)
+// El respaldo se guarda comprimido con extensión propia (.cuaderno): no se abre como texto en el navegador
+async function empacarRespaldo(txt){
+  try{
+    if(typeof CompressionStream==='function'){
+      const buf=await new Response(new Blob([txt]).stream().pipeThrough(new CompressionStream('gzip'))).arrayBuffer();
+      return {data:new Uint8Array(buf),ext:'cuaderno',mime:'application/octet-stream'};
+    }
+  }catch(e){}
+  return {data:txt,ext:'json',mime:'application/json'};
+}
 async function guardarPerfilArchivo(pw){
   const datos={app:'Mi Cuaderno Docente',version:2,fecha:new Date().toISOString(),
     clases:CLASSES.map(({id,g,s,m,c,al,ids,pa,pe,pp,modo,inst,h1,h2,sc,d,ret})=>({id,g,s,m,c,al,ids,pa,pe,pp,modo,inst,h1,h2,sc,d,ret})),
     alumnos:STU,vinculos:LINKS,recordatorios:REC,notas:NT,parciales:NP,actividades:ACT,temario:TEM,diario:DIA,asistencia:DB,
     perfil:{nombre:NOMBRE,foto:store.get('docentehn_foto')||null,bandera:BAND,regalo:regaloGet(),tema:document.documentElement.dataset.theme,idioma:IDIOMA}};
-  let txt=JSON.stringify(datos), nombre=`${t('resp.fn_json')}-${dayKey}.json`;
+  let txt=JSON.stringify(datos), nombre=`${t('resp.fn_json')}-${dayKey}`;
   if(typeof pw==='string'&&pw){   // con contraseña: el archivo sale cifrado
-    try{txt=JSON.stringify(await cifrarTexto(txt,pw)); nombre=`${t('resp.fn_json')}-${t('resp.fn_prot')}-${dayKey}.json`}catch(e){return toast(t('toast.noexport'))}
+    try{txt=JSON.stringify(await cifrarTexto(txt,pw)); nombre=`${t('resp.fn_json')}-${t('resp.fn_prot')}-${dayKey}`}catch(e){return toast(t('toast.noexport'))}
   }
-  entregar(nombre,txt,'application/json',t('toast.respaldo')).then(ok=>{if(ok){store.set('docentehn_respaldo',dayKey);regaloCuenta('resp')}});
+  const pk=await empacarRespaldo(txt);
+  entregar(`${nombre}.${pk.ext}`,pk.data,pk.mime,t('toast.respaldo')).then(ok=>{if(ok){store.set('docentehn_respaldo',dayKey);regaloCuenta('resp')}});
 }
 const nomIdioma=()=>(IDIOMAS.find(x=>x[0]===IDIOMA)||IDIOMAS[0])[1];
 function menuPerfil(){abrirSheet(t('aria.perfil'),regaloFilaMenu()+`
@@ -2681,15 +2692,21 @@ function respaldoValido(d){
   if(!obj(d.temario)||!obj(d.alumnos))return false;
   return true;
 }
-$('#fPerfil').addEventListener('change',e=>{
+// Lee un respaldo: comprimido (.cuaderno) o texto (.json de versiones anteriores)
+async function leerRespaldo(f){
+  const buf=new Uint8Array(await f.arrayBuffer());
+  let txt;
+  if(buf[0]===0x1f&&buf[1]===0x8b){
+    if(typeof DecompressionStream!=='function')throw new Error('sin soporte');
+    txt=await new Response(new Blob([buf]).stream().pipeThrough(new DecompressionStream('gzip'))).text();
+  }else txt=new TextDecoder().decode(buf);
+  return JSON.parse(txt);
+}
+$('#fPerfil').addEventListener('change',async e=>{
   const f=e.target.files[0]; e.target.value=''; if(!f)return;
-  const rd=new FileReader();
-  rd.onload=()=>{
-    let d=null; try{d=JSON.parse(rd.result)}catch(err){}
-    if(d&&d.cifrado)return pedirClaveRespaldo(d,restaurarDatos);
-    restaurarDatos(d);
-  };
-  rd.readAsText(f);
+  let d=null; try{d=await leerRespaldo(f)}catch(err){}
+  if(d&&d.cifrado)return pedirClaveRespaldo(d,restaurarDatos);
+  restaurarDatos(d);
 });
 function restaurarDatos(d){
   {
